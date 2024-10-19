@@ -1,49 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Tareas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #tareas-list {
+            margin-top: 20px;
+        }
+        .tarea {
+            margin-bottom: 10px;
+        }
+        .completada {
+            text-decoration: line-through;
+            color: green;
+        }
+    </style>
 </head>
 <body>
     <h1>Gestión de Tareas</h1>
-    <p>Abre la consola del navegador para ver las tareas y resultados de las operaciones.</p>
+    <form id="nueva-tarea-form">
+        <input type="text" id="titulo" placeholder="Título de la tarea" required>
+        <select id="prioridad">
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+        </select>
+        <button type="submit">Agregar Tarea</button>
+    </form>
+
+    <div id="tareas-list">
+        <h2>Listado de Tareas</h2>
+        <ul id="lista-tareas">
+            <!-- Aquí se mostrarán las tareas -->
+        </ul>
+    </div>
 
     <script>
-        // Cargar tareas desde LocalStorage al iniciar la aplicación
         let tareas = cargarTareas() || [];
 
-        // Función para agregar una nueva tarea con validación
+        // Función para agregar nueva tarea
+        document.getElementById('nueva-tarea-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const titulo = document.getElementById('titulo').value;
+            const prioridad = document.getElementById('prioridad').value;
+            agregarTarea(titulo, prioridad);
+            document.getElementById('nueva-tarea-form').reset();
+        });
+
+        // Función para agregar una tarea al array y actualizar la lista
         function agregarTarea(titulo, prioridad) {
             if (!titulo || !prioridadValida(prioridad)) {
-                console.log("Error: El título o la prioridad no son válidos.");
+                alert("Error: El título o la prioridad no son válidos.");
                 return;
             }
 
             const tareaExistente = tareas.some(tarea => tarea.titulo === titulo);
             if (tareaExistente) {
-                console.log(`Error: La tarea "${titulo}" ya existe.`);
+                alert(`Error: La tarea "${titulo}" ya existe.`);
                 return;
             }
 
             const nuevaTarea = {
                 titulo: titulo,
-                estado: 'pendiente', // Estado inicial: pendiente
+                estado: 'pendiente',
                 prioridad: prioridad.toLowerCase()
             };
             tareas.push(nuevaTarea);
-            guardarTareas(); // Guardar en LocalStorage
-            console.log(`Tarea "${titulo}" añadida con prioridad ${prioridad}.`);
+            guardarTareas();
+            mostrarTareas();
         }
 
-        // Función para listar todas las tareas de manera clara
-        function listarTareas() {
+        // Función para mostrar todas las tareas
+        function mostrarTareas() {
+            const lista = document.getElementById('lista-tareas');
+            lista.innerHTML = '';
+
             if (tareas.length === 0) {
-                console.log("No hay tareas.");
+                lista.innerHTML = '<li>No hay tareas.</li>';
             } else {
-                console.log("Listado de tareas:");
                 tareas.forEach((tarea, index) => {
-                    console.log(`${index + 1}. [${tarea.estado.toUpperCase()}] - ${tarea.titulo} (Prioridad: ${tarea.prioridad.toUpperCase()})`);
+                    const tareaItem = document.createElement('li');
+                    tareaItem.classList.add('tarea');
+                    if (tarea.estado === 'completada') {
+                        tareaItem.classList.add('completada');
+                    }
+                    tareaItem.innerHTML = `
+                        <span>${tarea.titulo} (Prioridad: ${tarea.prioridad.toUpperCase()})</span>
+                        <button onclick="completarTarea(${index})">Completar</button>
+                        <button onclick="eliminarTarea(${index})">Eliminar</button>
+                    `;
+                    lista.appendChild(tareaItem);
                 });
             }
         }
@@ -53,42 +104,16 @@
             if (indice >= 0 && indice < tareas.length) {
                 tareas[indice].estado = 'completada';
                 guardarTareas();
-                console.log(`Tarea "${tareas[indice].titulo}" marcada como completada.`);
-            } else {
-                console.log("Índice de tarea inválido.");
+                mostrarTareas();
             }
         }
 
         // Función para eliminar una tarea
         function eliminarTarea(indice) {
             if (indice >= 0 && indice < tareas.length) {
-                console.log(`Tarea "${tareas[indice].titulo}" eliminada.`);
                 tareas.splice(indice, 1);
                 guardarTareas();
-            } else {
-                console.log("Índice de tarea inválido.");
-            }
-        }
-
-        // Función para filtrar tareas por estado
-        function filtrarTareasPorEstado(estado) {
-            const tareasFiltradas = tareas.filter(tarea => tarea.estado === estado);
-            if (tareasFiltradas.length === 0) {
-                console.log(`No hay tareas con estado ${estado}.`);
-            } else {
-                console.log(`Tareas con estado ${estado}:`);
-                tareasFiltradas.forEach(tarea => console.log(`- ${tarea.titulo} (Prioridad: ${tarea.prioridad})`));
-            }
-        }
-
-        // Función para filtrar tareas por prioridad
-        function filtrarTareasPorPrioridad(prioridad) {
-            const tareasFiltradas = tareas.filter(tarea => tarea.prioridad === prioridad.toLowerCase());
-            if (tareasFiltradas.length === 0) {
-                console.log(`No hay tareas con prioridad ${prioridad}.`);
-            } else {
-                console.log(`Tareas con prioridad ${prioridad}:`);
-                tareasFiltradas.forEach(tarea => console.log(`- ${tarea.titulo} (Estado: ${tarea.estado})`));
+                mostrarTareas();
             }
         }
 
@@ -98,30 +123,20 @@
             return prioridadesValidas.includes(prioridad.toLowerCase());
         }
 
-        // Función para guardar tareas en LocalStorage
+        // Guardar tareas en LocalStorage
         function guardarTareas() {
             localStorage.setItem('tareas', JSON.stringify(tareas));
         }
 
-        // Función para cargar tareas desde LocalStorage
+        // Cargar tareas desde LocalStorage
         function cargarTareas() {
             const tareasGuardadas = localStorage.getItem('tareas');
             return tareasGuardadas ? JSON.parse(tareasGuardadas) : null;
         }
 
-        // Exponer funciones globalmente para acceder desde la consola
-        window.agregarTarea = agregarTarea;
-        window.listarTareas = listarTareas;
-        window.completarTarea = completarTarea;
-        window.eliminarTarea = eliminarTarea;
-        window.filtrarTareasPorEstado = filtrarTareasPorEstado;
-        window.filtrarTareasPorPrioridad = filtrarTareasPorPrioridad;
-
-        // Ejemplos iniciales
-        agregarTarea("Estudiar JavaScript", "alta");
-        agregarTarea("Comprar provisiones", "media");
-        agregarTarea("Hacer ejercicio", "baja");
-        listarTareas();
+        // Mostrar tareas al cargar la página
+        mostrarTareas();
     </script>
 </body>
 </html>
+
