@@ -23,6 +23,8 @@
 </head>
 <body>
     <h1>Gestión de Tareas</h1>
+
+    <!-- Formulario para agregar nueva tarea -->
     <form id="nueva-tarea-form">
         <input type="text" id="titulo" placeholder="Título de la tarea" required>
         <select id="prioridad">
@@ -33,6 +35,19 @@
         <button type="submit">Agregar Tarea</button>
     </form>
 
+    <!-- Filtros de estado -->
+    <h3>Filtrar por Estado</h3>
+    <button onclick="filtrarTareas('pendiente')">Mostrar Pendientes</button>
+    <button onclick="filtrarTareas('completada')">Mostrar Completadas</button>
+    <button onclick="mostrarTareas()">Mostrar Todas</button>
+
+    <!-- Filtros de prioridad -->
+    <h3>Filtrar por Prioridad</h3>
+    <button onclick="filtrarPorPrioridad('alta')">Prioridad Alta</button>
+    <button onclick="filtrarPorPrioridad('media')">Prioridad Media</button>
+    <button onclick="filtrarPorPrioridad('baja')">Prioridad Baja</button>
+
+    <!-- Listado de tareas -->
     <div id="tareas-list">
         <h2>Listado de Tareas</h2>
         <ul id="lista-tareas">
@@ -117,6 +132,58 @@
             }
         }
 
+        // Función para filtrar tareas por estado
+        function filtrarTareas(estado) {
+            const lista = document.getElementById('lista-tareas');
+            lista.innerHTML = '';
+
+            const tareasFiltradas = tareas.filter(tarea => tarea.estado === estado);
+
+            if (tareasFiltradas.length === 0) {
+                lista.innerHTML = `<li>No hay tareas ${estado === 'pendiente' ? 'pendientes' : 'completadas'}.</li>`;
+            } else {
+                tareasFiltradas.forEach((tarea, index) => {
+                    const tareaItem = document.createElement('li');
+                    tareaItem.classList.add('tarea');
+                    if (tarea.estado === 'completada') {
+                        tareaItem.classList.add('completada');
+                    }
+                    tareaItem.innerHTML = `
+                        <span>${tarea.titulo} (Prioridad: ${tarea.prioridad.toUpperCase()})</span>
+                        <button onclick="completarTarea(${index})">Completar</button>
+                        <button onclick="eliminarTarea(${index})">Eliminar</button>
+                    `;
+                    lista.appendChild(tareaItem);
+                });
+            }
+        }
+
+        // Función para filtrar tareas por prioridad
+        function filtrarPorPrioridad(prioridad) {
+            const lista = document.getElementById('lista-tareas');
+            lista.innerHTML = '';
+
+            const tareasFiltradas = tareas.filter(tarea => tarea.prioridad === prioridad);
+
+            if (tareasFiltradas.length === 0) {
+                lista.innerHTML = `<li>No hay tareas con prioridad ${prioridad}.</li>`;
+            } else {
+                tareasFiltradas.forEach((tarea, index) => {
+                    const tareaItem = document.createElement('li');
+                    tareaItem.classList.add('tarea');
+                    if (tarea.estado === 'completada') {
+                        tareaItem.classList.add('completada');
+                    }
+                    tareaItem.innerHTML = `
+                        <span>${tarea.titulo} (Prioridad: ${tarea.prioridad.toUpperCase()})</span>
+                        <button onclick="completarTarea(${index})">Completar</button>
+                        <button onclick="eliminarTarea(${index})">Eliminar</button>
+                    `;
+                    lista.appendChild(tareaItem);
+                });
+            }
+        }
+
         // Validar prioridad
         function prioridadValida(prioridad) {
             const prioridadesValidas = ['alta', 'media', 'baja'];
@@ -139,4 +206,5 @@
     </script>
 </body>
 </html>
+
 
